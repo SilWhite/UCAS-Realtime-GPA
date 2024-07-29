@@ -7,7 +7,6 @@ function main() {
 }
 
 
-
 function getOriginalData() {
     const rows = document.querySelectorAll(".table-striped.table-bordered.table-advance.table-hover tbody tr");
     let creditlist = [], scorelist = [], modelist = [];
@@ -45,13 +44,14 @@ function getOriginalData() {
     return { creditlist, scorelist, modelist }
 }
 
+
 function dispayGPA(gpa) {
     var tgtTableElement = document.querySelector('table[align="center"][border="0"][cellpadding="2"][cellspacing="2"]');
     var newTr = document.createElement('tr');
     var newTd1 = document.createElement('td');
     var newTd2 = document.createElement('td');
-    newTd1.textContent = "总GPA: ";//后续添加
-    newTd2.textContent = "当前页面GPA: " + gpa.toFixed(2);
+    newTd1.textContent = "当前页面GPA: " + gpa.toFixed(2);
+    newTd2.textContent = "总GPA: （暂未提供）";//后续添加
     newTr.appendChild(newTd1);
     newTr.appendChild(newTd2);
     tgtTableElement.appendChild(newTr);
@@ -76,7 +76,6 @@ function calculateGPA(creditlist, scorelist, modelist) {
 }
 
 
-
 function getGPA(score, mode) {
     // mode == 'score', 'grade' and 'five'
     var gpa = 0.0;
@@ -91,6 +90,7 @@ function getGPA(score, mode) {
     }
     return gpa;
 }
+
 
 function socre2gpa(score) {
     var gpa = 0.0;
@@ -146,6 +146,7 @@ function socre2gpa(score) {
     return gpa;
 }
 
+
 function grade2gpa(grade) {
     var gpa = 0.0;
     if (grade == "A") {
@@ -175,6 +176,7 @@ function grade2gpa(grade) {
     }
     return gpa;
 }
+
 
 function five2gpa(five) {
     var gpa = 0.0;
