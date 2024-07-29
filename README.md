@@ -11,7 +11,7 @@
   - 下载目录 
   - 将目录通过开发者模式加载到edge浏览器插件处
 
-    ![alt text](pics/image.png)
+    ![alt text](pics/pic.png)
   - 查询成绩时刷新即可
 - 待更新内容
   - [ ] 不及格即重修GPA计算（如何显示？）
