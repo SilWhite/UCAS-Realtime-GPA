@@ -3,7 +3,8 @@
 function main() {
     let data = getOriginalData();
     let gpa = calculateGPA(data.creditlist, data.scorelist, data.modelist);
-    dispayGPA(gpa);
+    let weight_score = calculateWeightScore(data.creditlist, data.scorelist);
+    dispayGPA(gpa, weight_score);
 }
 
 
@@ -45,18 +46,32 @@ function getOriginalData() {
 }
 
 
-function dispayGPA(gpa) {
+function dispayGPA(gpa, weight_score) {
     var tgtTableElement = document.querySelector('table[align="center"][border="0"][cellpadding="2"][cellspacing="2"]');
-    var newTr = document.createElement('tr');
+    var newTr1 = document.createElement('tr');
     var newTd1 = document.createElement('td');
     var newTd2 = document.createElement('td');
+    var newTr2 = document.createElement('tr');
+    var newTd3 = document.createElement('td');
     newTd1.textContent = "当前页面GPA: " + gpa.toFixed(2);
-    newTd2.textContent = "总GPA: （暂未提供）";//后续添加
-    newTr.appendChild(newTd1);
-    newTr.appendChild(newTd2);
-    tgtTableElement.appendChild(newTr);
+    newTd2.textContent = "当前页面加权成绩: " + weight_score.toFixed(2);
+    newTd3.textContent = "总GPA: （暂未提供）";//后续添加
+    newTr1.appendChild(newTd1);
+    newTr1.appendChild(newTd2);
+    newTr2.appendChild(newTd3);
+    tgtTableElement.appendChild(newTr1);
+    tgtTableElement.appendChild(newTr2);
 }
 
+function calculateWeightScore(creditlist, scorelist) { //需要添加pf下不及格的减分逻辑（按照综评要求）
+    totalcredit = 0.0;
+    totalscore = 0.0;
+    for (let i = 0; i < creditlist.length; i++) {
+        totalcredit += creditlist[i];
+        totalscore += scorelist[i] * creditlist[i];
+    }
+    return totalscore / totalcredit;
+}
 
 function calculateGPA(creditlist, scorelist, modelist) {
     let gpalist = [];
