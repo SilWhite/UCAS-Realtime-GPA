@@ -1,18 +1,29 @@
+
+// 成绩映射
+// 缺少补考及格
+// 缺少pf处理逻辑
+const score_gpa = new Map([[90, 4.0], [87, 3.9], [85, 3.8], [83, 3.7], [82, 3.6], [80, 3.5], [78, 3.4], [76, 3.3], [75, 3.2], [74, 3.1], [73, 3.0], [72, 2.9], [71, 2.8], [69, 2.7], [68, 2.6], [67, 2.5], [66, 2.4], [64, 2.3], [63, 2.2], [62, 2.1], [61, 1.8], [60, 1.6]]);
+
+const grade_gpa = new Map([['A', 4.0], ['A-', 3.8], ['B+', 3.6], ['B', 3.4], ['B-', 3.2], ['C+', 2.8], ['C', 2.4], ['C-', 2.1], ['D', 1.6], ['D-', 1.0], ['F', 0.0]]);
+
+const five_gpa = new Map([['优秀', 4.0], ['良好', 3.4], ['中等', 2.4], ['及格', 1.6], ['不及格', 0.0]]);
+
+const pf_gpa = new Map([['合格', 4.0], ['不合格', 0.0]]);
+
 (main)()
 
 function main() {
     let data = getOriginalData();
     let gpa = calculateGPA(data.creditlist, data.scorelist, data.modelist);
-    let weight_score = calculateWeightScore(data.creditlist, data.scorelist);
+    let weight_score = calculateWeightScore(data.creditlist, data.scorelist, data.pflist);
     dispayGPA(gpa, weight_score);
 }
 
-
 function getOriginalData() {
     const rows = document.querySelectorAll(".table-striped.table-bordered.table-advance.table-hover tbody tr");
-    let creditlist = [], scorelist = [], modelist = [];
-    const grades = ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D', 'D-', 'F']
-    const fivepoint = ['优秀', '良好', '中等', '合格', '不合格']
+    let creditlist = [], scorelist = [], modelist = [], pflist = [];
+    let grades = Array.from(grade_gpa.keys());
+    let fivepoint = Array.from(five_gpa.keys());
 
     for (let i = 0; i < rows.length; i++) {
         const cells = rows[i].querySelectorAll("td");
@@ -30,19 +41,26 @@ function getOriginalData() {
                     scorelist.push(score);
                     modelist.push("grade");
                 } else if (score.includes(fivepoint)) {
-                    continue; // 如何处理pf和五级制？都显示合格。
-                    // modelist.push("five");
+                    creditlist.push(parseFloat(credit));
+                    scorelist.push(score);
+                    modelist.push("five");
+                    // 在助教培训上说：合格/不合格（pf），.../及格/不及格（五级制）【2024.9.24】
                 } else if (score == 'W') {
                     continue; // 中期退课
-                } else {
-                    // 不知道为什么读取“合格”非法，可能是编码问题？
-                    // throw "Invalid score: " + score;
+                } else {// PF成绩
+                    // // ？？？？？为什么读取合格会报错，不理解？？？？？？
+                    // if (score == "合格") {
+                    //     pflist.push(0);
+                    // } else if (score == "不合格") {
+                    //     pflist.push(1);
+                    // } else {
                     console.log("Invalid score: " + score + ", in " + cells[1].textContent.trim());
+                    // throw "Invalid score: " + score;
                 }
             }
         }
     }
-    return { creditlist, scorelist, modelist }
+    return { creditlist, scorelist, modelist, pflist }
 }
 
 
@@ -54,7 +72,7 @@ function dispayGPA(gpa, weight_score) {
     var newTr2 = document.createElement('tr');
     var newTd3 = document.createElement('td');
     newTd1.textContent = "当前页面GPA: " + gpa.toFixed(2);
-    newTd2.textContent = "当前页面加权成绩: " + weight_score.toFixed(2);
+    newTd2.textContent = "当前页面加权成绩（综评）: " + weight_score.toFixed(2);
     newTd3.textContent = "总GPA: （暂未提供）";//后续添加
     newTr1.appendChild(newTd1);
     newTr1.appendChild(newTd2);
@@ -63,14 +81,24 @@ function dispayGPA(gpa, weight_score) {
     tgtTableElement.appendChild(newTr2);
 }
 
-function calculateWeightScore(creditlist, scorelist) { //需要添加pf下不及格的减分逻辑（按照综评要求）
+function calculateWeightScore(creditlist, scorelist, pflist) { //pf不合格减分（综评要求每门不合格扣2%）
+    rst = 0.0;
     totalcredit = 0.0;
     totalscore = 0.0;
     for (let i = 0; i < creditlist.length; i++) {
         totalcredit += creditlist[i];
         totalscore += scorelist[i] * creditlist[i];
     }
-    return totalscore / totalcredit;
+    rst = totalscore / totalcredit;
+
+    fail_num = 0;
+    for (let i = 0; i < pflist.length; i++) {
+        fail_num += pflist[i]; // 合格为0，不合格为1
+    }
+    if (fail_num > 0) {
+        rst *= (1 - 0.02 * fail_num);
+    }
+    return rst;
 }
 
 function calculateGPA(creditlist, scorelist, modelist) {
@@ -107,107 +135,33 @@ function getGPA(score, mode) {
 }
 
 
+
 function socre2gpa(score) {
-    var gpa = 0.0;
-    if (score >= 90) {
-        gpa = 4.0;
-    } else if (score >= 87) {
-        gpa = 3.9;
-    } else if (score >= 85) {
-        gpa = 3.8;
-    } else if (score >= 83) {
-        gpa = 3.7;
-    } else if (score >= 82) {
-        gpa = 3.6;
-    } else if (score >= 80) {
-        gpa = 3.5;
-    } else if (score >= 78) {
-        gpa = 3.4;
-    } else if (score >= 76) {
-        gpa = 3.3;
-    } else if (score >= 75) {
-        gpa = 3.2;
-    } else if (score >= 74) {
-        gpa = 3.1;
-    } else if (score >= 73) {
-        gpa = 3.0;
-    } else if (score >= 72) {
-        gpa = 2.9;
-    } else if (score >= 71) {
-        gpa = 2.8;
-    } else if (score >= 69) {
-        gpa = 2.7;
-    } else if (score >= 68) {
-        gpa = 2.6;
-    } else if (score >= 67) {
-        gpa = 2.5;
-    } else if (score >= 66) {
-        gpa = 2.4;
-    } else if (score >= 64) {
-        gpa = 2.3;
-    } else if (score >= 63) {
-        gpa = 2.2;
-    } else if (score >= 62) {
-        gpa = 2.1;
-    } else if (score >= 61) {
-        gpa = 1.8;
-    } else if (score >= 60) {
-        gpa = 1.6;
+    for (let [i, j] of score_gpa) {
+        if (score >= i) {
+            return j;
+        }
     }
-    //补考合格和不及格需要添加
-    else {
-        throw "Invalid score!";
-    }
-    return gpa;
+    throw "Invalid score!";// 成绩不包含在列表
 }
 
 
 function grade2gpa(grade) {
-    var gpa = 0.0;
-    if (grade == "A") {
-        gpa = 4.0;
-    } else if (grade == "A-") {
-        gpa = 3.8;
-    } else if (grade == "B+") {
-        gpa = 3.6;
-    } else if (grade == "B") {
-        gpa = 3.4;
-    } else if (grade == "B-") {
-        gpa = 3.2;
-    } else if (grade == "C+") {
-        gpa = 2.8;
-    } else if (grade == "C") {
-        gpa = 2.4;
-    } else if (grade == "C-") {
-        gpa = 2.1;
-    } else if (grade == "D") {
-        gpa = 1.6;
-    } else if (grade == "D-") {
-        gpa = 1.0;
-    } else if (grade == "F") {
-        gpa = 0.0;
-    } else {
-        throw "Invalid grade!";
+    for (let [i, j] of grade_gpa) {
+        if (grade == i) {
+            return j;
+        }
     }
-    return gpa;
+    throw "Invalid grade!";// 成绩不包含在列表
 }
 
 
 function five2gpa(five) {
-    var gpa = 0.0;
-    if (five == '优秀') {
-        gpa = 4.0;
-    } else if (five == '良好') {
-        gpa = 3.4;
-    } else if (five == '中等') {
-        gpa = 2.4;
-    } else if (five == '合格') {
-        gpa = 1.6;
-    } else if (five == '不合格') {
-        gpa = 0.0;
-    } else {
-        throw "Invalid five-point scale!";
+    for (let [i, j] of five_gpa) {
+        if (five == i) {
+            return j;
+        }
     }
-    return gpa;
+    throw "Invalid five-point scale!";// 成绩不包含在列表
 }
 
